@@ -14,6 +14,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int count = 0;
   int goal = 108;
+  int streak = 0;
+  bool goalReachedToday = false;
 
   @override
   void initState() {
@@ -24,12 +26,26 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> loadData() async {
     count = await StorageService.loadCount();
     goal = await StorageService.loadGoal();
-
+    streak = await StorageService.loadStreak();
     setState(() {});
   }
 
   Future<void> increment() async {
     count++;
+    if (count == goal) {
+  final today = DateTime.now().toIso8601String().split('T')[0];
+
+  final lastDate =
+      await StorageService.loadLastCompletedDate();
+
+  if (lastDate == null || !lastDate.startsWith(today) ) {
+    streak++;
+
+    await StorageService.saveStreak(streak);
+    await StorageService.saveLastCompletedDate(DateTime.now(),
+    );
+  }
+}
 
     if (await Vibration.hasVibrator()) {
       if (count == goal) {
@@ -207,6 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Text(
                     "Goal: $goal",
+                    
                     style:
                         const TextStyle(
                       fontSize: 22,
@@ -277,6 +294,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
+              const SizedBox(height: 20),
+              Text( 
+                "🔥 Streak: $streak",
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              )
             ],
           ),
         ),
