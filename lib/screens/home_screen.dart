@@ -1,219 +1,286 @@
 import 'package:flutter/material.dart';
+import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:vibration/vibration.dart';
+
 import '../services/storage_service.dart';
 
 class HomeScreen extends StatefulWidget {
-const HomeScreen({super.key});
+  const HomeScreen({super.key});
 
-@override
-State<HomeScreen> createState() => _HomeScreenState();
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-int count = 0;
-int goal = 108;
+  int count = 0;
+  int goal = 108;
 
-@override
-void initState() {
-super.initState();
-loadData();
-}
+  @override
+  void initState() {
+    super.initState();
+    loadData();
+  }
 
-Future<void> loadData() async {
-count = await StorageService.loadCount();
-goal = await StorageService.loadGoal();
-setState(() {});
-}
+  Future<void> loadData() async {
+    count = await StorageService.loadCount();
+    goal = await StorageService.loadGoal();
 
-Future<void> increment() async {
-count++;
+    setState(() {});
+  }
 
-if (await Vibration.hasVibrator()) {
-  Vibration.vibrate(duration: 30);
-}
+  Future<void> increment() async {
+    count++;
 
-await StorageService.saveCount(count);
+    if (await Vibration.hasVibrator()) {
+      if (count == goal) {
+        Vibration.vibrate(duration: 300);
+      } else {
+        Vibration.vibrate(duration: 30);
+      }
+    }
 
-setState(() {});
+    await StorageService.saveCount(count);
 
-}
+    setState(() {});
+  }
 
-Future<void> decrement() async {
-if (count > 0) {
-count--;
-await StorageService.saveCount(count);
-setState(() {});
-}
-}
+  Future<void> decrement() async {
+    if (count > 0) {
+      count--;
 
-Future<void> resetCounter() async {
-count = 0;
-await StorageService.saveCount(count);
-setState(() {});
-}
+      await StorageService.saveCount(count);
 
-Future<void> setGoal() async {
-final controller = TextEditingController(
-text: goal.toString(),
-);
+      setState(() {});
+    }
+  }
 
-await showDialog(
-  context: context,
-  builder: (context) => AlertDialog(
-    title: const Text("Set Goal"),
-    content: TextField(
-      controller: controller,
-      keyboardType: TextInputType.number,
-      decoration: const InputDecoration(
-        hintText: "Enter goal",
-      ),
-    ),
-    actions: [
-      TextButton(
-        onPressed: () => Navigator.pop(context),
-        child: const Text("Cancel"),
-      ),
-      TextButton(
-        onPressed: () {
-          final value =
-              int.tryParse(controller.text);
+  Future<void> resetCounter() async {
+    count = 0;
 
-          if (value != null && value > 0) {
-            setState(() {
-              goal = value;
-            });
-            StorageService.saveGoal(goal);
-          }
+    await StorageService.saveCount(count);
 
-          Navigator.pop(context);
-        },
-        child: const Text("Save"),
-      ),
-    ],
-  ),
-);
+    setState(() {});
+  }
 
-}
+  Future<void> setGoal() async {
+    final controller = TextEditingController(
+      text: goal.toString(),
+    );
 
-@override
-Widget build(BuildContext context) {
-double progress =
-(count / goal).clamp(0.0, 1.0);
-
-return Scaffold(
-  body: GestureDetector(
-    behavior: HitTestBehavior.opaque,
-    onTap: increment,
-    child: SafeArea(
-      child: Column(
-        mainAxisAlignment:
-            MainAxisAlignment.center,
-        children: [
-          const Text(
-            "TapCount",
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-            ),
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Set Goal"),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            hintText: "Enter goal",
           ),
-
-          const SizedBox(height: 40),
-
-          Text(
-            "$count",
-            style: const TextStyle(
-              fontSize: 90,
-              fontWeight: FontWeight.bold,
-            ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
           ),
+          TextButton(
+            onPressed: () {
+              final value =
+                  int.tryParse(controller.text);
 
-          const SizedBox(height: 20),
+              if (value != null && value > 0) {
+                setState(() {
+                  goal = value;
+                });
 
-          Row(
-            mainAxisAlignment:
-                MainAxisAlignment.center,
-            children: [
-              Text(
-                "Goal: $goal",
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+                StorageService.saveGoal(goal);
+              }
 
-              IconButton(
-                onPressed: setGoal,
-                icon: const Icon(Icons.edit),
-              ),
-            ],
-          ),
-
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(
-              horizontal: 40,
-            ),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 10,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          Text(
-            "${(progress * 100).toInt()}%",
-            style: const TextStyle(
-              fontSize: 18,
-            ),
-          ),
-
-          if (count >= goal)
-            const Padding(
-              padding:
-                  EdgeInsets.only(top: 10),
-              child: Text(
-                "🎉 Goal Reached!",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight:
-                      FontWeight.bold,
-                  color: Colors.green,
-                ),
-              ),
-            ),
-
-          const SizedBox(height: 30),
-
-          const Text(
-            "Tap Anywhere",
-            style: TextStyle(
-              fontSize: 20,
-            ),
-          ),
-
-          const SizedBox(height: 50),
-
-          Row(
-            mainAxisAlignment:
-                MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton(
-                onPressed: decrement,
-                child: const Text("-1"),
-              ),
-
-              ElevatedButton(
-                onPressed: resetCounter,
-                child: const Text("Reset"),
-              ),
-            ],
+              Navigator.pop(context);
+            },
+            child: const Text("Save"),
           ),
         ],
       ),
-    ),
-  ),
-);
+    );
+  }
 
-}
+  @override
+  Widget build(BuildContext context) {
+    double progress =
+        (count / goal).clamp(0.0, 1.0);
+
+    bool goalReached = count >= goal;
+
+    return Scaffold(
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: increment,
+        child: SafeArea(
+          child: Column(
+            mainAxisAlignment:
+                MainAxisAlignment.center,
+            children: [
+              const Text(
+                "TapCount",
+                style: TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 40),
+
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: goalReached
+                          ? Colors.greenAccent
+                              .withValues(alpha: 0.4)
+                          : Colors.blueAccent
+                              .withValues(alpha: 0.3),
+                      blurRadius: 25,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: CircularPercentIndicator(
+                  radius: 120,
+                  lineWidth: 14,
+                  percent: progress,
+                  animation: true,
+                  animationDuration: 500,
+                  animateFromLastPercent: true,
+                  circularStrokeCap:
+                      CircularStrokeCap.round,
+                  backgroundColor:
+                      Colors.white12,
+                  progressColor: goalReached
+                      ? Colors.greenAccent
+                      : Colors.blueAccent,
+                  center: Column(
+                    mainAxisAlignment:
+                        MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "$count",
+                        style: TextStyle(
+                          fontSize: 50,
+                          fontWeight:
+                              FontWeight.bold,
+                          color: goalReached
+                              ? const Color.fromARGB(255, 47, 223, 56)
+                              : Colors.blueAccent,
+                          shadows: [
+                            Shadow(
+                              blurRadius:
+                                  goalReached
+                                      ? 20
+                                      : 8,
+                              color: goalReached
+                                  ? const Color.fromARGB(255, 47, 223, 56)
+                                  : Colors
+                                      .blueAccent,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        "/ $goal",
+                        style:
+                            const TextStyle(
+                          fontSize: 20,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 25),
+
+              Row(
+                mainAxisAlignment:
+                    MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Goal: $goal",
+                    style:
+                        const TextStyle(
+                      fontSize: 22,
+                      fontWeight:
+                          FontWeight.w500,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: setGoal,
+                    icon: const Icon(
+                      Icons.edit,
+                    ),
+                  ),
+                ],
+              ),
+
+              if (goalReached)
+                const Padding(
+                  padding:
+                      EdgeInsets.only(
+                    top: 10,
+                  ),
+                  child: Text(
+                    "🎉 Goal Reached!",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight:
+                          FontWeight.bold,
+                      color: Colors.green,
+                    ),
+                  ),
+                ),
+
+              const SizedBox(height: 30),
+
+              const Text(
+                "Tap Anywhere",
+                style: TextStyle(
+                  fontSize: 20,
+                ),
+              ),
+
+              const SizedBox(height: 50),
+
+              Row(
+                mainAxisAlignment:
+                    MainAxisAlignment
+                        .spaceEvenly,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: decrement,
+                    icon: const Icon(
+                      Icons.remove,
+                    ),
+                    label: const Text(
+                      "Minus",
+                    ),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed:
+                        resetCounter,
+                    icon: const Icon(
+                      Icons.refresh,
+                    ),
+                    label: const Text(
+                      "Reset",
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
