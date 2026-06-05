@@ -3,6 +3,8 @@ import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:vibration/vibration.dart';
 
 import '../services/storage_service.dart';
+import 'stats_screen.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,6 +17,10 @@ class _HomeScreenState extends State<HomeScreen> {
   int count = 0;
   int goal = 108;
   int streak = 0;
+  int totalTaps = 0;
+  int longestStreak = 0;
+  int goalsCompleted = 0;
+  
   bool goalReachedToday = false;
 
   @override
@@ -27,11 +33,18 @@ class _HomeScreenState extends State<HomeScreen> {
     count = await StorageService.loadCount();
     goal = await StorageService.loadGoal();
     streak = await StorageService.loadStreak();
+    totalTaps = await StorageService.loadTotalTaps();
+    longestStreak = await StorageService.loadLongestStreak();
+    goalsCompleted = await StorageService.loadGoalsCompleted();
+
     setState(() {});
   }
 
   Future<void> increment() async {
     count++;
+    totalTaps++;
+    await StorageService.saveTotalTaps(totalTaps);
+
     if (count == goal) {
   final today = DateTime.now().toIso8601String().split('T')[0];
 
@@ -39,7 +52,13 @@ class _HomeScreenState extends State<HomeScreen> {
       await StorageService.loadLastCompletedDate();
 
   if (lastDate == null || !lastDate.startsWith(today) ) {
-    streak++;
+    goalsCompleted++;
+    await StorageService.saveGoalsCompleted(goalsCompleted);
+    if (streak > longestStreak) {
+      longestStreak = streak + 1;
+      await StorageService.saveLongestStreak(longestStreak);
+    }
+     streak++;
 
     await StorageService.saveStreak(streak);
     await StorageService.saveLastCompletedDate(DateTime.now(),
@@ -137,15 +156,39 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisAlignment:
                 MainAxisAlignment.center,
             children: [
-              const Text(
-                "TapCount",
-                style: TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              Row(
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  children: [
+    const SizedBox(width: 48),
 
-              const SizedBox(height: 40),
+    const Text(
+      "TapCount",
+      style: TextStyle(
+        fontSize: 30,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+
+    IconButton(
+      icon: const Icon(Icons.bar_chart),
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => StatsScreen(
+              streak: streak,
+              totalTaps: totalTaps,
+              longestStreak: longestStreak,
+              goalsCompleted: goalsCompleted,
+            ),
+          ),
+        );
+      },
+    ),
+  ],
+),
+
+const SizedBox(height: 40),
 
               Container(
                 decoration: BoxDecoration(
