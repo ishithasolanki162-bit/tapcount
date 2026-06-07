@@ -8,6 +8,10 @@ class StorageService {
   static const String totalTapsKey = "totalTaps";
   static const String longestStreakKey = "longestStreak";
   static const String goalsCompletedKey = "goalsCompleted";
+  static const String firstGoalKey = "firstGoal";
+  static const String tenGoalsKey = "tenGoals";
+  static const String thousandTapsKey = "thousandTaps";
+  static const String sevenDayStreakKey = "sevenDayStreak";
 
   static Future<void> saveCount(int count) async {
     final prefs = await SharedPreferences.getInstance();
@@ -77,5 +81,14 @@ class StorageService {
   static Future<int> loadGoalsCompleted() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt(goalsCompletedKey) ?? 0;
+ 
+  }
+  static Future<void> saveAchievement(String key , bool value,) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(key, value);
+  }
+  static Future<bool> loadAchievement(String key,) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(key) ?? false;
   }
 }

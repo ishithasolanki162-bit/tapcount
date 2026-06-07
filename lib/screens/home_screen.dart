@@ -4,6 +4,7 @@ import 'package:vibration/vibration.dart';
 
 import '../services/storage_service.dart';
 import 'stats_screen.dart';
+import 'achievements_screen.dart';
 
 
 class HomeScreen extends StatefulWidget {
@@ -155,7 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             mainAxisAlignment:
                 MainAxisAlignment.center,
-            children: [
+            children: <Widget>[
               Row(
   mainAxisAlignment: MainAxisAlignment.spaceBetween,
   children: [
@@ -169,21 +170,42 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     ),
 
-    IconButton(
-      icon: const Icon(Icons.bar_chart),
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => StatsScreen(
-              streak: streak,
-              totalTaps: totalTaps,
-              longestStreak: longestStreak,
-              goalsCompleted: goalsCompleted,
-            ),
-          ),
-        );
-      },
+    Row(
+      children: [
+        IconButton(
+          icon: const Icon(Icons.emoji_events),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                     AchievementsScreen(
+                      totalTaps: totalTaps,
+                      streak: streak,
+                      goalsCompleted: goalsCompleted,
+                    ),
+              ),
+            );
+          },
+        ),
+
+        IconButton(
+          icon: const Icon(Icons.bar_chart),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => StatsScreen(
+                  streak: streak,
+                  totalTaps: totalTaps,
+                  longestStreak: longestStreak,
+                  goalsCompleted: goalsCompleted,
+                ),
+              ),
+            );
+          },
+        ),
+      ],
     ),
   ],
 ),
